@@ -111,13 +111,13 @@ function createWriteStream(filename, options, size) {
 
 streamSaver = {
   createWriteStream: createWriteStream,
-  WritableStream: global.WritableStream,
+  WritableStream: global ? global.WritableStream : window.WritableStream,
   mitm: "https://linlanly.github.io",
 };
 Object.defineProperty(streamSaver, 'TransformStream', {
   configurable: false,
   writable: false,
-  value: global.TransformStream
+  value: global ? global.TransformStream : window.TransformStream
 })
 
 export default streamSaver
