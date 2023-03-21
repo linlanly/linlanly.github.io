@@ -12,7 +12,10 @@
 
     new Response('streamsaver真棒！').body
       .pipeTo(fileStream)
-      .then(success, error)
+      .then((success, error) => {
+        console.log('show success', success)
+        console.log('show error', error)
+      })
   </script>
 </head>
 
