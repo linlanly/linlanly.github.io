@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>中间页</title>
+  <script>
+    console.log('????? ha    ve', navigator.serviceWorker)
+    // 消息队列
+    let messages = []
+    // iframe监听到消息，塞到消息队列
+    window.onmessage = evt => messages.push(evt)
+    // 注册的service worker实例
+    let sw = null
+    let scope = ''
+
+    // 注册service worker
+    function registerWorker() {
+      return navigator.serviceWorker.getRegistration('./').then(swReg => {
+        return swReg || navigator.serviceWorker.register('serviceworker.js', { scope: './' })
+      }).then(swReg => {
+        const swRegTmp = swReg.installing || swReg.waiting
+        scope = swReg.scope
+        // 精简代码
+        return (sw = swReg.active)
+      })
+    }
+
+    if (navigator.ServiceWorker) {
+      console.log('????? have')
+      registerWorker()
+    }
+
+    // 队列内消息的处理，发生在sw注册成功之后
+    registerWorker().then(() => {
+      window.onmessage = onMessage
+      // 依次执行消息，并post到sw
+      messages.forEach(window.onmessage)
+    })
+
+    // 队列消息处理逻辑
+    function onMessage(event) {
+      let { data, ports, origin } = event
+      // 所以所有下载链接都需要加前缀以避免任何其他冲突
+      data.origin = origin
+      // 重定向到发起 http 请求的页面
+      data.referrer = data.referrer || document.referrer || origin
+      if (typeof data.filename === 'string') {
+        data.filename = data.filename.replace(/\//g, ':')
+      }
+      if (!data.pathname) {
+        data.pathname = Math.random().toString().slice(-6) + '/' + data.filename
+      }
+      // 删除所有前导斜杠
+      data.pathname = data.pathname.replace(/^\/+/g, '')
+      // 删除协议
+      let org = origin.replace(/(^\w+:|^)\/\//, '')
+      // 将绝对路径名设置为下载 url。
+      data.url = new URL(`${scope + org}/${data.pathname}`).toString()
+      // 将页面传递进来的messageChannel.port2传递给service worker，方便service worker与页面进行通信
+      const transferable = [ports[0]]
+
+      // 我们本文默认通过可传输流传递数据，所以keepAlive，实际上没有必要，但为了扩展，还是保留了
+      if (!data.transferringReadable) {
+        keepAlive()
+      }
+
+      return sw.postMessage(data, transferable)
+    }
+
+    let keepAlive = () => {
+      keepAlive = () => { }
+      var ping = location.href.substr(0, location.href.lastIndexOf('/')) + '/ping'
+      var interval = setInterval(() => {
+        if (sw) {
+          sw.postMessage('ping')
+        } else {
+          fetch(ping).then(res => res.text(!res.ok && clearInterval(interval)))
+        }
+      }, 10000)
+    }
+  </script>
+</head>
+
+<body>
+  <div>你好</div>
+</body>
+
+</html>
