@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>web页面</title>
+  <script>
+    const fileStream = streamSaver.createWriteStream('filename.pdf', {
+      writableStrategy: undefined,
+      readableStrategy: undefined
+    })
+
+    new Response('streamsaver真棒！').body
+      .pipeTo(fileStream)
+      .then(success, error)
+  </script>
+</head>
+
+<body>web</body>
+
+</html>
