@@ -6,6 +6,7 @@
   <script type="module">
     import streamSaver from "./webDeal.js"
     const fileStream = streamSaver.createWriteStream('filename.pdf', {
+      pathname: 'http://172.16.44.237:2030/ibasem/api/mhw/htcx/printWord?LSH=YDD_LSH2023032116342484162',
       writableStrategy: undefined,
       readableStrategy: undefined
     })
